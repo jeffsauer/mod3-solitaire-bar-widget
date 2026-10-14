@@ -35,14 +35,14 @@ const H = Logic.SUIT_HEARTS, D = Logic.SUIT_DIAMONDS, C = Logic.SUIT_CLUBS, S = 
     const { state, dealt } = Logic.newGameState();
     ok(state.grid.length === 32, 'newGame: 32 slots');
     ok(state.grid.every(p => p.length === 1), 'newGame: 1 card per slot');
-    ok(state.deck.length === 72, 'newGame: 72 in talon (104-32)');
+    ok(state.deck.length === 64, 'newGame: 64 in talon (96-32)');
     ok(dealt.length === 32, 'newGame: 32 deal events');
     const counts = {};
     const all = [...state.deck, ...state.grid.flat()];
-    ok(all.length === 104, 'newGame: 104 cards total');
+    ok(all.length === 96, 'newGame: 96 cards total (2 decks x 4 suits x 12 ranks)');
     for (const cd of all) counts[cd.suit + ':' + cd.rank] = (counts[cd.suit + ':' + cd.rank] || 0) + 1;
     ok(Object.values(counts).every(n => n === 2), 'newGame: every card appears exactly twice');
-    ok(all.every(cd => cd.rank >= 2 && cd.rank <= 14), 'newGame: ranks 2..14');
+    ok(all.every(cd => cd.rank >= 2 && cd.rank <= 13), 'newGame: ranks 2..13, no aces');
     ok(state.message.includes('New Game'), 'newGame: message');
 }
 

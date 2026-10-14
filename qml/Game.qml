@@ -75,6 +75,18 @@ Item {
         hiddenTops = {};
     }
 
+    // Publish a state mutation to the view. The game logic mutates the
+    // grid/deck arrays in place, but QML bindings compare `var` properties
+    // by reference — returning the same array object would NOT notify and
+    // the piles would never re-render. Fresh copies force the update.
+    function refreshState() {
+        if (gameState) {
+            gameState.grid = gameState.grid.map(function (p) { return p.slice(); });
+            gameState.deck = gameState.deck.slice();
+        }
+        root.stateVersion++;
+    }
+
     function clearVictory() {
         for (var i = 0; i < victoryItems.length; i++) {
             victoryItems[i].destroy();
@@ -144,7 +156,7 @@ Item {
         if (!gameState || gameState.isWon) return;
         var evs = Logic.handleGridClick(gameState, r, c, Date.now());
         runEvents(evs);
-        root.stateVersion++;
+        refreshState();
         if (evs.length > 0) updateSolver();
     }
 
@@ -152,7 +164,7 @@ Item {
         if (!gameState || gameState.isWon) return;
         var evs = Logic.dealFromTalon(gameState);
         runEvents(evs);
-        root.stateVersion++;
+        refreshState();
         if (evs.length > 0) updateSolver();
     }
 
@@ -162,10 +174,10 @@ Item {
             clearFlights();
             clearVictory();
             if (!muted) flipSound.play();
-            root.stateVersion++;
+            refreshState();
             updateSolver();
         } else {
-            root.stateVersion++;
+            refreshState();
         }
     }
 

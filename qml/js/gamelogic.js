@@ -7,7 +7,8 @@
 // state object, so this file can also be unit-tested with node.
 // Import in QML with:  import "js/gamelogic.js" as Logic
 //
-// Card: { suit: 0..3, rank: 2..14 }   (11=J, 12=Q, 13=K, 14=A)
+// Card: { suit: 0..3, rank: 2..13 }   (11=J, 12=Q, 13=K; no aces —
+// like the V version, the deck holds ranks 2..13 only, 96 cards total)
 // State: {
 //   deck: [Card],            // talon, dealt via pop()
 //   grid: [[Card] x 32],     // 4 rows x 8 cols, row-major
@@ -91,7 +92,7 @@ function newGameState() {
     var suits = [SUIT_HEARTS, SUIT_DIAMONDS, SUIT_CLUBS, SUIT_SPADES];
     for (var d = 0; d < 2; d++) {
         for (var s = 0; s < suits.length; s++) {
-            for (var r = 2; r <= 14; r++) {
+            for (var r = 2; r <= 13; r++) {  // 2..13: V's `2..14` excludes 14
                 deck.push(makeCard(suits[s], r));
             }
         }
