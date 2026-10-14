@@ -44,10 +44,6 @@ Item {
     SoundEffect {
         id: flipSound
         source: "../sounds/card_flip.wav"
-        // Temporary diagnostic: reports load status to the quickshell log
-        onStatusChanged: console.log("flipSound status:", status,
-                                     status === SoundEffect.Ready ? "(ready)" :
-                                     status === SoundEffect.Error ? "(ERROR)" : "")
     }
 
     WorkerScript {

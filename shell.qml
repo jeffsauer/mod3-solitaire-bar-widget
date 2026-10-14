@@ -12,8 +12,8 @@ import "qml"
 ShellRoot {
     FloatingWindow {
         title: "Mod3 Solitaire"
-        width: 1015
-        height: 864
+        implicitWidth: 1015
+        implicitHeight: 864
         minimumSize: Qt.size(640, 540)
         color: "#22703e"
 
