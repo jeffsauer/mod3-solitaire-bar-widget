@@ -20,7 +20,17 @@ Item {
     property string solverStatus: "Solver: Unknown"
     property int solverVersion: 0
     property bool muted: false
-    property bool confirmQuitOpen: false
+
+    // Shared "Are you sure?" confirmation dialog
+    property bool confirmOpen: false
+    property string confirmText: ""
+    property var confirmYesAction: null
+
+    function openConfirm(text, yesAction) {
+        confirmText = text;
+        confirmYesAction = yesAction;
+        confirmOpen = true;
+    }
 
     // "r,c" -> number of card flights currently targeting that pile's top.
     // The grid hides a pile's top card while its flight is in flight.
@@ -363,7 +373,9 @@ Item {
             y: Logic.btnY(0)
             label: "NEW GAME"
             bgColor: "#be3232"
-            onClicked: root.newGame()
+            onClicked: root.openConfirm(
+                "Are you sure you want to start a new game? Your current game will be lost.",
+                function () { root.newGame(); })
         }
         GameButton {
             x: Logic.sideX()
@@ -387,7 +399,9 @@ Item {
             y: Logic.btnY(3)
             label: "EXIT"
             bgColor: "#5a5a5a"
-            onClicked: root.confirmQuitOpen = true
+            onClicked: root.openConfirm(
+                "Are you sure you want to quit?",
+                function () { Qt.quit(); })
         }
 
         // Talon
@@ -483,10 +497,10 @@ Item {
             }
         }
 
-        // Quit confirmation dialog
+        // Shared "Are you sure?" confirmation dialog
         Item {
             anchors.fill: parent
-            visible: root.confirmQuitOpen
+            visible: root.confirmOpen
 
             Rectangle {
                 anchors.fill: parent
@@ -495,7 +509,7 @@ Item {
             // Clicking the dim area cancels
             MouseArea {
                 anchors.fill: parent
-                onClicked: root.confirmQuitOpen = false
+                onClicked: root.confirmOpen = false
             }
 
             Rectangle {
@@ -511,7 +525,7 @@ Item {
                     x: 20
                     y: 26
                     width: 300
-                    text: "Are you sure you want to quit?"
+                    text: root.confirmText
                     color: "white"
                     font.bold: true
                     font.pixelSize: 15
@@ -522,14 +536,17 @@ Item {
                     y: 100
                     label: "YES"
                     bgColor: "#be3232"
-                    onClicked: Qt.quit()
+                    onClicked: {
+                        root.confirmOpen = false;
+                        if (root.confirmYesAction) root.confirmYesAction();
+                    }
                 }
                 GameButton {
                     x: 200
                     y: 100
                     label: "NO"
                     bgColor: "#3c8cc8"
-                    onClicked: root.confirmQuitOpen = false
+                    onClicked: root.confirmOpen = false
                 }
             }
         }
