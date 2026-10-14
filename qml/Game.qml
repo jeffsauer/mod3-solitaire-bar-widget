@@ -20,6 +20,7 @@ Item {
     property string solverStatus: "Solver: Unknown"
     property int solverVersion: 0
     property bool muted: false
+    property bool confirmQuitOpen: false
 
     // "r,c" -> number of card flights currently targeting that pile's top.
     // The grid hides a pile's top card while its flight is in flight.
@@ -381,6 +382,13 @@ Item {
             bgColor: root.muted ? "#963c3c" : "#3c785a"
             onClicked: root.muteClicked()
         }
+        GameButton {
+            x: Logic.sideX()
+            y: Logic.btnY(3)
+            label: "EXIT"
+            bgColor: "#5a5a5a"
+            onClicked: root.confirmQuitOpen = true
+        }
 
         // Talon
         Item {
@@ -472,6 +480,57 @@ Item {
                 color: "white"
                 font.bold: true
                 font.pixelSize: 12
+            }
+        }
+
+        // Quit confirmation dialog
+        Item {
+            anchors.fill: parent
+            visible: root.confirmQuitOpen
+
+            Rectangle {
+                anchors.fill: parent
+                color: "#80000000"
+            }
+            // Clicking the dim area cancels
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.confirmQuitOpen = false
+            }
+
+            Rectangle {
+                x: (Logic.DESIGN_W - 340) / 2
+                y: (Logic.DESIGN_H - 170) / 2
+                width: 340
+                height: 170
+                color: "#1e4d2e"
+                border.color: "white"
+                border.width: 2
+
+                Text {
+                    x: 20
+                    y: 26
+                    width: 300
+                    text: "Are you sure you want to quit?"
+                    color: "white"
+                    font.bold: true
+                    font.pixelSize: 15
+                    wrapMode: Text.WordWrap
+                }
+                GameButton {
+                    x: 60
+                    y: 100
+                    label: "YES"
+                    bgColor: "#be3232"
+                    onClicked: Qt.quit()
+                }
+                GameButton {
+                    x: 200
+                    y: 100
+                    label: "NO"
+                    bgColor: "#3c8cc8"
+                    onClicked: root.confirmQuitOpen = false
+                }
             }
         }
     }
