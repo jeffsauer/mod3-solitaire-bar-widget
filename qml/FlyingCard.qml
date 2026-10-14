@@ -27,8 +27,12 @@ Item {
         rank: root.cardRank
     }
 
+    // NOTE: the animation must NOT auto-start. Game.qml connects the
+    // started/finished signals first, then calls start(). With delayMs = 0
+    // an auto-running animation would emit `started` before the handler
+    // is connected and the flip sound would never play.
     SequentialAnimation {
-        running: true
+        id: flyAnim
         PauseAnimation { duration: root.delayMs }
         ScriptAction { script: root.started() }
         NumberAnimation {
@@ -40,5 +44,9 @@ Item {
             easing.type: Easing.InOutQuad
         }
         ScriptAction { script: root.finished() }
+    }
+
+    function start() {
+        flyAnim.start();
     }
 }

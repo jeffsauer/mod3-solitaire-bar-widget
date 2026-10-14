@@ -129,6 +129,7 @@ Item {
             root.stateVersion++;
         });
         flightItems.push(obj);
+        obj.start();
         root.stateVersion++;
     }
 
