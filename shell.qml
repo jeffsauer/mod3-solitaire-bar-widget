@@ -11,11 +11,16 @@ import "qml"
 // repository root — the game itself lives in qml/Game.qml.
 ShellRoot {
     FloatingWindow {
+        id: gameWindow
         title: "Mod3 Solitaire"
         implicitWidth: 1015
         implicitHeight: 864
         minimumSize: Qt.size(640, 540)
         color: "#22703e"
+
+        // SUPER+Q (compositor kill) closes the window but quickshell would
+        // otherwise keep running — exit the process too, no Ctrl-C needed.
+        onVisibleChanged: if (!visible) Qt.quit()
 
         Game {
             anchors.fill: parent
