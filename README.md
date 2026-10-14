@@ -18,8 +18,10 @@ target slot — or double-click a card to auto-play it to a valid target.
 ## Layout
 
 ```
+shell.qml          Quickshell entry point (fullscreen layer-shell surface;
+                   must stay at the repo root — quickshell -c loads
+                   <config dir>/shell.qml)
 qml/
-  shell.qml          Quickshell entry point (fullscreen layer-shell surface)
   Game.qml           The game UI (pure QtQuick — also runs under qmlscene)
   CardView.qml       Card image component
   FlyingCard.qml     Animated card-flight overlay
