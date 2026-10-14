@@ -368,7 +368,7 @@ Item {
             x: Logic.sideX()
             y: Logic.btnY(0)
             label: "NEW GAME"
-            bgColor: "#be3232"
+            bgColor: "#3c8cc8"
             onClicked: root.openConfirm(
                 "Are you sure you want to start a new game? Your current game will be lost.",
                 function () { root.newGame(); })
@@ -394,7 +394,7 @@ Item {
             x: Logic.sideX()
             y: Logic.btnY(3)
             label: "EXIT"
-            bgColor: "#5a5a5a"
+            bgColor: "#be3232"
             onClicked: root.openConfirm(
                 "Are you sure you want to quit?",
                 function () { Qt.quit(); })
