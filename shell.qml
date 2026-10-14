@@ -20,9 +20,11 @@ ShellRoot {
     property var gameTheme: Theme.defaultTheme()
 
     FileView {
+        id: themeFile
         path: Quickshell.env("HOME") + "/.local/state/omarchy/current/theme/colors.toml"
         watchChanges: true
-        onTextChanged: shellRoot.gameTheme = Theme.loadTheme(text)
+        onLoaded: shellRoot.gameTheme = Theme.loadTheme(themeFile.text())
+        onFileChanged: themeFile.reload()
     }
 
     FloatingWindow {
