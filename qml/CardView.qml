@@ -6,9 +6,10 @@ Item {
     id: root
 
     property int suit: 0      // 0=hearts, 1=diamonds, 2=clubs, 3=spades
-    property int rank: 2       // 2..14 (11=J, 12=Q, 13=K, 14=A)
+    property int rank: 2       // 2..13 (11=J, 12=Q, 13=K)
     property bool selected: false
     property bool showBack: false
+    property color selectionColor: "#ff8c00"
 
     Image {
         anchors.fill: parent
@@ -24,6 +25,6 @@ Item {
         anchors.fill: parent
         color: "transparent"
         border.width: root.selected ? 3 : 1
-        border.color: root.selected ? "#ff8c00" : "black"
+        border.color: root.selected ? root.selectionColor : "black"
     }
 }

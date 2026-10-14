@@ -56,6 +56,17 @@ qmlscene qml/Game.qml
 `Game.qml` imports nothing Quickshell-specific, so it runs anywhere QtQuick
 does. `shell.qml` is just a thin `FloatingWindow` wrapper.
 
+## Theming
+
+On Omarchy, the game follows the active desktop theme. `shell.qml` watches
+`~/.local/state/omarchy/current/theme/colors.toml` (the staged palette
+Omarchy regenerates on every theme switch) and maps its `background`,
+`foreground`, `accent`, `red`, `green`, `blue` and `yellow` onto the felt,
+text, buttons and selection highlight — switching themes re-skins the game
+live, no restart. The parsing lives in `qml/js/theme.js` (tested by
+`tests/test_theme.mjs`). If the file is absent (e.g. plain `qmlscene` on a
+non-Omarchy box), the built-in green-felt palette is used.
+
 ## Tests
 
 The game logic and the solver are plain JavaScript, tested with node:

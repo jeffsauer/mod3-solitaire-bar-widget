@@ -2,6 +2,7 @@ import QtQml
 import QtQuick
 import QtMultimedia
 import "js/gamelogic.js" as Logic
+import "js/theme.js" as Theme
 
 // Mod3 Solitaire - pure QtQuick game UI (ported from the V/gg version).
 //
@@ -20,6 +21,9 @@ Item {
     property string solverStatus: "Solver: Unknown"
     property int solverVersion: 0
     property bool muted: false
+
+    // Desktop theme colors (Omarchy palette via shell.qml, else built-ins)
+    property var theme: Theme.defaultTheme()
 
     // Shared "Are you sure?" confirmation dialog
     property bool confirmOpen: false
@@ -264,7 +268,7 @@ Item {
         // Felt
         Rectangle {
             anchors.fill: parent
-            color: "#22703e"
+            color: theme.felt
         }
 
         // Header
@@ -272,7 +276,7 @@ Item {
             x: Logic.START_X
             y: 14
             text: "MOD3 SOLITAIRE"
-            color: "white"
+            color: theme.fg
             font.bold: true
             font.pixelSize: 22
         }
@@ -280,7 +284,7 @@ Item {
             x: Logic.START_X
             y: 42
             text: { root.stateVersion; return root.gameState ? root.gameState.message : ""; }
-            color: { root.stateVersion; return (root.gameState && root.gameState.isWon) ? "#64ff64" : "yellow"; }
+            color: { root.stateVersion; return (root.gameState && root.gameState.isWon) ? theme.green : theme.yellow; }
             font.bold: { root.stateVersion; return !!(root.gameState && root.gameState.isWon); }
             font.pixelSize: 13
         }
@@ -294,7 +298,7 @@ Item {
                 x: Logic.START_X
                 y: Logic.rowY(index) - 15
                 text: modelData
-                color: "#d2f0d2"
+                color: theme.dimFg
                 font.bold: true
                 font.pixelSize: 11
             }
@@ -322,7 +326,7 @@ Item {
                     width: Logic.CARD_W
                     height: Logic.CARD_H
                     color: "transparent"
-                    border.color: "#46ffffff"
+                    border.color: theme.slotBorder
                     border.width: 1
                 }
 
@@ -336,6 +340,7 @@ Item {
                         height: Logic.CARD_H
                         suit: pileCards[index] ? pileCards[index].suit : 0
                         rank: pileCards[index] ? pileCards[index].rank : 2
+                        selectionColor: theme.accent
                         selected: {
                             root.stateVersion;
                             return index === pileCards.length - 1
@@ -368,7 +373,7 @@ Item {
             x: Logic.sideX()
             y: Logic.btnY(0)
             label: "NEW GAME"
-            bgColor: "#3c8cc8"
+            bgColor: theme.blue
             onClicked: root.openConfirm(
                 "Are you sure you want to start a new game? Your current game will be lost.",
                 function () { root.newGame(); })
@@ -379,7 +384,7 @@ Item {
             label: "UNDO"
             bgColor: {
                 root.stateVersion;
-                return (root.gameState && root.gameState.undoStack.length > 0) ? "#3c8cc8" : "#464646";
+                return (root.gameState && root.gameState.undoStack.length > 0) ? theme.blue : Qt.darker(theme.blue, 2.0);
             }
             onClicked: root.undoClicked()
         }
@@ -387,14 +392,14 @@ Item {
             x: Logic.sideX()
             y: Logic.btnY(2)
             label: root.muted ? "UNMUTE" : "MUTE"
-            bgColor: root.muted ? "#963c3c" : "#3c785a"
+            bgColor: root.muted ? theme.red : theme.green
             onClicked: root.muteClicked()
         }
         GameButton {
             x: Logic.sideX()
             y: Logic.btnY(3)
             label: "EXIT"
-            bgColor: "#be3232"
+            bgColor: theme.red
             onClicked: root.openConfirm(
                 "Are you sure you want to quit?",
                 function () { Qt.quit(); })
@@ -410,7 +415,7 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 color: "transparent"
-                border.color: "#46ffffff"
+                border.color: theme.slotBorder
                 border.width: 1
                 visible: {
                     root.stateVersion;
@@ -439,14 +444,14 @@ Item {
             width: 400
             height: 100
             color: "#d2000000"
-            border.color: "#ffd700"
+            border.color: theme.yellow
             border.width: 2
 
             Text {
                 x: 40
                 y: 20
                 text: "CONGRATULATIONS! YOU WON!"
-                color: "yellow"
+                color: theme.yellow
                 font.bold: true
                 font.pixelSize: 18
             }
@@ -457,7 +462,7 @@ Item {
                     root.stateVersion;
                     return "Completed in " + (root.gameState ? root.gameState.moveCount : 0) + " moves.";
                 }
-                color: "white"
+                color: theme.fg
                 font.pixelSize: 13
             }
         }
@@ -468,15 +473,15 @@ Item {
             y: Logic.DESIGN_H - Logic.BOTTOM_BAR_H
             width: Logic.DESIGN_W
             height: Logic.BOTTOM_BAR_H
-            color: "#144626"
-            border.color: "#32ffffff"
+            color: Qt.darker(theme.felt, 1.5)
+            border.color: theme.barBorder
             border.width: 1
 
             Text {
                 x: Logic.START_X
                 y: 7
                 text: root.solverStatus
-                color: "#c8c8c8"
+                color: theme.dimFg
                 font.bold: true
                 font.pixelSize: 12
             }
@@ -487,7 +492,7 @@ Item {
                     root.stateVersion;
                     return "MOVES: " + (root.gameState ? root.gameState.moveCount : 0);
                 }
-                color: "white"
+                color: theme.fg
                 font.bold: true
                 font.pixelSize: 12
             }
@@ -513,8 +518,8 @@ Item {
                 y: (Logic.DESIGN_H - 170) / 2
                 width: 340
                 height: 170
-                color: "#1e4d2e"
-                border.color: "white"
+                color: Qt.darker(theme.felt, 1.2)
+                border.color: theme.fg
                 border.width: 2
 
                 Text {
@@ -522,7 +527,7 @@ Item {
                     y: 26
                     width: 300
                     text: root.confirmText
-                    color: "white"
+                    color: theme.fg
                     font.bold: true
                     font.pixelSize: 15
                     wrapMode: Text.WordWrap
@@ -531,7 +536,7 @@ Item {
                     x: 60
                     y: 100
                     label: "YES"
-                    bgColor: "#be3232"
+                    bgColor: theme.red
                     onClicked: {
                         root.confirmOpen = false;
                         if (root.confirmYesAction) root.confirmYesAction();
@@ -541,7 +546,7 @@ Item {
                     x: 200
                     y: 100
                     label: "NO"
-                    bgColor: "#3c8cc8"
+                    bgColor: theme.blue
                     onClicked: root.confirmOpen = false
                 }
             }
