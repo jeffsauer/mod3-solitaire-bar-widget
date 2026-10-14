@@ -14,17 +14,33 @@ import "qml/js/theme.js" as Theme
 ShellRoot {
     id: shellRoot
 
-    // Omarchy's live theme palette. FileView watches the file, so switching
-    // the desktop theme re-skins the game without a restart. If the file is
-    // missing (non-Omarchy box), the game's built-in palette is used.
+    // Omarchy's live theme palette. If the file is missing (non-Omarchy
+    // box), the game's built-in palette is used.
     property var gameTheme: Theme.defaultTheme()
+    property string lastThemeText: ""
 
     FileView {
         id: themeFile
         path: Quickshell.env("HOME") + "/.local/state/omarchy/current/theme/colors.toml"
         watchChanges: true
-        onLoaded: shellRoot.gameTheme = Theme.loadTheme(themeFile.text())
+        onLoaded: {
+            var t = themeFile.text();
+            if (t !== shellRoot.lastThemeText) {
+                shellRoot.lastThemeText = t;
+                shellRoot.gameTheme = Theme.loadTheme(t);
+            }
+        }
         onFileChanged: themeFile.reload()
+    }
+
+    // Omarchy stages a theme switch in next-theme/ and then swaps the
+    // current/ directory, so the watched inode can change without a file
+    // event. Poll as a backup: a theme switch re-skins within ~3 seconds.
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: themeFile.reload()
     }
 
     FloatingWindow {
