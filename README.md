@@ -1,7 +1,8 @@
 # mod3_solitaire_qml
 
 QML port of **Mod3 Solitaire** (the Mod3 variation from KDE kpatience),
-originally written in V with the `gg`/sokol backend. This version is an
+originally written in V with the `gg`/sokol backend
+([jeffsauer/mod3_solitaire](https://github.com/jeffsauer/mod3_solitaire)). This version is an
 [Omarchy](https://omarchy.org/) **bar widget plugin**: a ♠ button in the
 Quattro bar opens the game in a panel.
 
