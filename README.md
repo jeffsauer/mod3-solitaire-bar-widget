@@ -1,6 +1,6 @@
 # mod3-solitaire-bar-widget
 
-QML port of **Mod3 Solitaire** (the Mod3 variation from KDE kpatience),
+QML port of **Mod3 Solitaire** (the Mod3 variation from [KDE Patience](https://apps.kde.org/kpat/)),
 originally written in V with the `gg`/sokol backend
 ([jeffsauer/mod3_solitaire](https://github.com/jeffsauer/mod3_solitaire)). This version is an
 [Omarchy](https://omarchy.org/) **bar widget plugin**: a ♠ button in the
