@@ -11,6 +11,11 @@ Item {
     property bool showBack: false
     property string backSource: "../SVG-cards/card_back.svg"
     property color selectionColor: "#ff8c00"
+    // Set when the wallpaper-backed source fails to load; the card then
+    // falls back to the bundled back instead of rendering blank.
+    property bool backFailed: false
+    property string effectiveBackSource: backFailed ? "../SVG-cards/card_back.svg" : backSource
+    onBackSourceChanged: backFailed = false
 
     // Card back: wallpaper crop with a traditional white border.
     Item {
@@ -25,10 +30,15 @@ Item {
         Image {
             anchors.fill: parent
             anchors.margins: 7
-            source: root.backSource
+            source: root.effectiveBackSource
             fillMode: Image.PreserveAspectCrop
             smooth: true
             asynchronous: true
+            onStatusChanged: {
+                if (status === Image.Error && !root.backFailed) {
+                    root.backFailed = true
+                }
+            }
         }
     }
 

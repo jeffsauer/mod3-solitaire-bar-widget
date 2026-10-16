@@ -47,7 +47,7 @@ Panel {
     // falling back to the bundled back if none is available.
     property string wallpaperPath: ""
     property string cardBackSource: {
-        if (/\.(png|jpe?g|webp|bmp|tiff?|svg)$/i.test(wallpaperPath))
+        if (/\.(png|jpe?g|gif|webp|bmp|tiff?|svg)$/i.test(wallpaperPath))
             return "file://" + wallpaperPath
         return Qt.resolvedUrl("SVG-cards/card_back.svg")
     }
@@ -61,8 +61,10 @@ Panel {
         stdout: StdioCollector {
             onStreamFinished: {
                 var p = text.trim()
-                if (p !== root.wallpaperPath)
+                if (p !== root.wallpaperPath) {
+                    console.log("[mod3-solitaire] wallpaper resolved to:", p)
                     root.wallpaperPath = p
+                }
             }
         }
     }
