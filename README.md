@@ -66,7 +66,7 @@ omarchy plugin remove io.github.jeffsauer.mod3-solitaire
 
 ## Theming
 
-On Omarchy, the game follows the active desktop theme. `shell.qml` watches
+On Omarchy, the game follows the active desktop theme. `Panel.qml` watches
 `~/.local/state/omarchy/current/theme/colors.toml` (the staged palette
 Omarchy regenerates on every theme switch) and maps its `background`,
 `foreground`, `accent`, `red`, `green`, `blue` and `yellow` onto the felt,

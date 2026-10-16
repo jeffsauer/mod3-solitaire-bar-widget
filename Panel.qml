@@ -37,8 +37,8 @@ Panel {
         return false
     }
 
-    // Omarchy's live theme palette (moved from shell.qml). If the file is
-    // missing (non-Omarchy box), the game's built-in palette is used.
+    // Omarchy's live theme palette. If the file is
+    // missing, the game's built-in palette is used.
     property var gameTheme: Theme.defaultTheme()
     property string lastThemeText: ""
 

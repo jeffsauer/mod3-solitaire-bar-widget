@@ -11,8 +11,6 @@ import "js/theme.js" as Theme
 // in gamelogic.js ports 1:1. Game state lives in a plain JS object
 // (`gameState`); after every mutation `stateVersion` is bumped so QML
 // bindings re-evaluate.
-//
-// Run standalone under qmlscene, or fullscreen under Quickshell via shell.qml.
 Item {
     id: root
 
@@ -22,7 +20,7 @@ Item {
     property int solverVersion: 0
     property bool muted: false
 
-    // Desktop theme colors (Omarchy palette via shell.qml, else built-ins)
+    // Desktop theme colors (Omarchy palette via Panel.qml, else built-ins)
     property var theme: Theme.defaultTheme()
 
     // Card back image source (set by the host; defaults to the bundled back).
