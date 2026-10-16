@@ -333,6 +333,7 @@ Item {
                     width: Logic.CARD_W
                     height: Logic.CARD_H
                     color: "transparent"
+                    radius: 6
                     border.color: theme.slotBorder
                     border.width: 1
                 }
@@ -413,6 +414,7 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 color: "transparent"
+                radius: 6
                 border.color: theme.slotBorder
                 border.width: 1
                 visible: {
