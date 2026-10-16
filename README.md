@@ -104,11 +104,6 @@ entry — it resolves fine at runtime (QtQml auto-imports it).
   scaled to the window), same rules, same messages, same victory physics,
   same bounded-DFS solver (20,000 states) now running in a `WorkerScript`
   instead of a V thread.
-- One behavior carried over verbatim from the V version that looks like a
-  bug: clicking the talon deals one card onto **every** row-4 slot, including
-  ones that already hold a card (the automatic refill after moves correctly
-  targets only empty slots). Preserved as-is; change `dealFromTalon` in
-  `qml/js/gamelogic.js` if you'd rather the talon only filled empty slots.
 - Double-click auto-play uses the same 350 ms manual detection as the V
   version (QML's `MouseArea.onDoubleClicked` would also fire the two
   underlying clicks, so the timing check is done by hand).
