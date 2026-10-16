@@ -50,7 +50,12 @@ between bar sections with:
 omarchy bar move io.github.jeffsauer.mod3-solitaire --section right
 ```
 
-Requires the `qt6-multimedia` QML module for the card-flip sound.
+Requires the `qt6-multimedia` QML module for the card-flip sound. Install it
+with:
+
+```sh
+sudo pacman -S qt6-multimedia
+```
 
 ## Theming
 
