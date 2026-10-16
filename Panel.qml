@@ -1,0 +1,92 @@
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import qs.Commons
+import qs.Ui
+import "qml"
+import "qml/js/theme.js" as Theme
+
+// Game panel for the Mod3 Solitaire bar widget.
+// Anchored to the bar button; hosts the full game at its 1015x864
+// design size. Escape closes it via PanelKeyCatcher.
+Panel {
+    id: root
+
+    moduleName: "io.github.jeffsauer.mod3-solitaire"
+    manageIpc: false
+
+    property var anchorItem: null
+    property var hostWidget: null
+
+    function open() {
+        root.controller.show()
+    }
+
+    function close() {
+        root.controller.hide()
+    }
+
+    function toggle() {
+        if (root.opened) root.close()
+        else root.open()
+    }
+
+    function switchPanel(direction) {
+        if (root.bar && typeof root.bar.switchPanelFrom === "function")
+            return root.bar.switchPanelFrom(root.hostWidget || root, direction)
+        return false
+    }
+
+    // Omarchy's live theme palette (moved from shell.qml). If the file is
+    // missing (non-Omarchy box), the game's built-in palette is used.
+    property var gameTheme: Theme.defaultTheme()
+    property string lastThemeText: ""
+
+    FileView {
+        id: themeFile
+        path: Quickshell.env("HOME") + "/.local/state/omarchy/current/theme/colors.toml"
+        watchChanges: true
+        onLoaded: {
+            var t = themeFile.text();
+            if (t !== root.lastThemeText) {
+                root.lastThemeText = t;
+                root.gameTheme = Theme.loadTheme(t);
+            }
+        }
+        onFileChanged: themeFile.reload()
+    }
+
+    // Omarchy stages a theme switch in next-theme/ and then swaps the
+    // current/ directory, so the watched inode can change without a file
+    // event. Poll as a backup: a theme switch re-skins within ~3 seconds.
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: themeFile.reload()
+    }
+
+    KeyboardPanel {
+        id: panel
+        anchorItem: root.anchorItem
+        owner: root.hostWidget || root
+        bar: root.bar
+        open: root.opened
+        focusTarget: keyCatcher
+        contentWidth: 1015
+        contentHeight: 864
+
+        PanelKeyCatcher {
+            id: keyCatcher
+            anchors.fill: parent
+            onCloseRequested: root.close()
+            onTabRequested: function (direction) { root.switchPanel(direction) }
+
+            Game {
+                anchors.fill: parent
+                theme: root.gameTheme
+                onRequestClose: root.close()
+            }
+        }
+    }
+}

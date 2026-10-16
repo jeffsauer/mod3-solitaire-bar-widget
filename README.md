@@ -1,9 +1,10 @@
 # mod3_solitaire_qml
 
 QML port of **Mod3 Solitaire** (the Mod3 variation from KDE kpatience),
-originally written in V with the `gg`/sokol backend. This version targets
-[Quickshell](https://quickshell.org/) on Wayland compositors such as Hyprland
-(Omarchy), and also runs under plain Qt Quick (`qmlscene`).
+originally written in V with the `gg`/sokol backend. This version is an
+[Omarchy](https://omarchy.org/) **bar widget plugin**: a ♠ button in the
+Quattro bar opens the game in a panel. It also runs as a standalone
+Quickshell window or under plain Qt Quick (`qmlscene`).
 
 Two decks, 32 slots in a 4×8 grid. Build same-suit sequences in rows 1–3:
 
@@ -18,7 +19,10 @@ target slot — or double-click a card to auto-play it to a valid target.
 ## Layout
 
 ```
-shell.qml          Quickshell entry point (regular desktop window;
+manifest.json      Omarchy plugin manifest (bar-widget)
+BarWidget.qml      Bar entry point: ♠ button, toggles the game panel
+Panel.qml          Game panel (anchored to the bar button, Escape closes)
+shell.qml          Standalone Quickshell entry point (regular desktop window;
                    must stay at the repo root — quickshell -c loads
                    <config dir>/shell.qml)
 qml/
@@ -37,7 +41,22 @@ tests/
 
 ## Running
 
-**Under Quickshell** (Omarchy / Hyprland):
+**As an Omarchy bar widget plugin:**
+
+```sh
+omarchy plugin add https://github.com/jeffsauer/mod3_solitaire_qml.git --enable
+```
+
+Click the ♠ in the bar to open the game panel; Escape or the EXIT button
+closes it. Move it between bar sections with:
+
+```sh
+omarchy bar move io.github.jeffsauer.mod3-solitaire --section right
+```
+
+Requires the `qt6-multimedia` QML module for the card-flip sound.
+
+**As a standalone Quickshell window** (Omarchy / Hyprland):
 
 ```sh
 mkdir -p ~/.config/quickshell
