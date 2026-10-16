@@ -85,7 +85,6 @@ Panel {
             Game {
                 anchors.fill: parent
                 theme: root.gameTheme
-                onRequestClose: root.close()
             }
         }
     }

@@ -58,7 +58,6 @@ ShellRoot {
         Game {
             anchors.fill: parent
             theme: shellRoot.gameTheme
-            onRequestClose: Qt.quit()
         }
     }
 }

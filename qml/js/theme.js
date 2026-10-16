@@ -67,7 +67,7 @@ function loadTheme(text) {
         dimFg: pick('foreground', '#d2f0d2'),        // labels, status text
         accent: pick('accent', '#ff8c00'),           // selection highlight
         blue: pick('blue', '#3c8cc8'),               // NEW GAME / UNDO / NO
-        red: pick('red', '#be3232'),                 // EXIT / YES / MUTE-off
+        red: pick('red', '#be3232'),                 // YES / MUTE-off
         green: pick('green', '#3c785a'),             // MUTE-on / win message
         yellow: pick('yellow', '#ffff00'),           // message text / banner
         slotBorder: withAlpha(fg, 0.27),             // empty slot outlines

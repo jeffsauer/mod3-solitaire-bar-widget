@@ -30,11 +30,6 @@ Item {
     property string confirmText: ""
     property var confirmYesAction: null
 
-    // Emitted when the user confirms EXIT. The host (panel or window)
-    // decides what "quit" means — a bar-widget panel closes itself,
-    // the standalone window quits the process.
-    signal requestClose()
-
     function openConfirm(text, yesAction) {
         confirmText = text;
         confirmYesAction = yesAction;
@@ -399,15 +394,6 @@ Item {
             label: root.muted ? "UNMUTE" : "MUTE"
             bgColor: root.muted ? theme.red : theme.green
             onClicked: root.muteClicked()
-        }
-        GameButton {
-            x: Logic.sideX()
-            y: Logic.btnY(3)
-            label: "EXIT"
-            bgColor: theme.red
-            onClicked: root.openConfirm(
-                "Are you sure you want to quit?",
-                function () { root.requestClose(); })
         }
 
         // Talon
