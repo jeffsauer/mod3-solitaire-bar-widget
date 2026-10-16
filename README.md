@@ -1,4 +1,4 @@
-# mod3_solitaire_qml
+# mod3-solitaire-bar-widget
 
 QML port of **Mod3 Solitaire** (the Mod3 variation from KDE kpatience),
 originally written in V with the `gg`/sokol backend
@@ -41,7 +41,7 @@ tests/
 **As an Omarchy bar widget plugin:**
 
 ```sh
-omarchy plugin add https://github.com/jeffsauer/mod3_solitaire_qml.git --enable
+omarchy plugin add https://github.com/jeffsauer/mod3-solitaire-bar-widget.git --enable
 ```
 
 Click the ♠ in the bar to open the game panel; Escape closes it. Move it
