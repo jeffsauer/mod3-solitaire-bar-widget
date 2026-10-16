@@ -4,7 +4,7 @@ QML port of **Mod3 Solitaire** (the Mod3 variation from KDE kpatience),
 originally written in V with the `gg`/sokol backend
 ([jeffsauer/mod3_solitaire](https://github.com/jeffsauer/mod3_solitaire)). This version is an
 [Omarchy](https://omarchy.org/) **bar widget plugin**: a ♠ button in the
-Quattro bar opens the game in a panel.
+desktop bar opens the game in a panel.
 
 Two decks, 32 slots in a 4×8 grid. Build same-suit sequences in rows 1–3:
 
@@ -56,6 +56,12 @@ with:
 
 ```sh
 sudo pacman -S qt6-multimedia
+```
+
+## How to Remove
+
+```sh
+omarchy plugin remove io.github.jeffsauer.mod3-solitaire
 ```
 
 ## Theming
