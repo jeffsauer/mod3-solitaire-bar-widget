@@ -9,7 +9,7 @@ Item {
     property int rank: 2       // 2..13 (11=J, 12=Q, 13=K)
     property bool selected: false
     property bool showBack: false
-    property string backSource: "../PNG-cards-1.3/card_back.png"
+    property string backSource: "../SVG-cards/card_back.svg"
     property color selectionColor: "#ff8c00"
 
     // Card back: wallpaper crop with a traditional white border.
@@ -35,7 +35,7 @@ Item {
     Image {
         anchors.fill: parent
         visible: !root.showBack
-        source: "../PNG-cards-1.3/" + Logic.cardImageName(root.suit, root.rank)
+        source: "../SVG-cards/" + Logic.cardImageName(root.suit, root.rank)
         fillMode: Image.Stretch
         smooth: true
         asynchronous: true

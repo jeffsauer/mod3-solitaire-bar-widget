@@ -49,7 +49,7 @@ Panel {
     property string cardBackSource: {
         if (/\.(png|jpe?g|webp|bmp|tiff?|svg)$/i.test(wallpaperPath))
             return "file://" + wallpaperPath
-        return Qt.resolvedUrl("PNG-cards-1.3/card_back.png")
+        return Qt.resolvedUrl("SVG-cards/card_back.svg")
     }
 
     function refreshWallpaper() { bgProc.running = true }

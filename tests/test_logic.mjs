@@ -170,11 +170,11 @@ const H = Logic.SUIT_HEARTS, D = Logic.SUIT_DIAMONDS, C = Logic.SUIT_CLUBS, S = 
 
 // --- card image names ---
 {
-    ok(Logic.cardImageName(0, 14) === '1_of_hearts.png', 'img: ace');
-    ok(Logic.cardImageName(3, 11) === 'jack_of_spades.png', 'img: jack');
-    ok(Logic.cardImageName(1, 12) === 'queen_of_diamonds.png', 'img: queen');
-    ok(Logic.cardImageName(2, 13) === 'king_of_clubs.png', 'img: king');
-    ok(Logic.cardImageName(0, 10) === '10_of_hearts.png', 'img: ten');
+    ok(Logic.cardImageName(0, 14) === '1_of_hearts.svg', 'img: ace');
+    ok(Logic.cardImageName(3, 11) === 'jack_of_spades.svg', 'img: jack');
+    ok(Logic.cardImageName(1, 12) === 'queen_of_diamonds.svg', 'img: queen');
+    ok(Logic.cardImageName(2, 13) === 'king_of_clubs.svg', 'img: king');
+    ok(Logic.cardImageName(0, 10) === '10_of_hearts.svg', 'img: ten');
 }
 
 // --- solver ---

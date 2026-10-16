@@ -24,7 +24,7 @@ Item {
     property var theme: Theme.defaultTheme()
 
     // Card back image source (set by the host; defaults to the bundled back).
-    property string cardBackSource: "../PNG-cards-1.3/card_back.png"
+    property string cardBackSource: "../SVG-cards/card_back.svg"
 
     // Corner radius of the host panel card (0 = square). The full-bleed
     // layers (felt, bottom bar, dialog dim) are rounded to match so they

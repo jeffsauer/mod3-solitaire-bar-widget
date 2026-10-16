@@ -30,7 +30,7 @@ qml/
   js/
     gamelogic.js     Game rules + state (.pragma library, no Qt dependencies)
     solver_worker.js Background win-solver (WorkerScript entry, self-contained)
-PNG-cards-1.3/       Card artwork (individual PNGs; the atlas is unused here)
+SVG-cards/           Vector card artwork (48 faces + card back, SVG; crisp at any size)
 sounds/              card_flip.wav
 tests/
   test_logic.mjs     Node unit tests for the game logic + solver
@@ -101,5 +101,8 @@ entry — it resolves fine at runtime (QtQml auto-imports it).
 - Double-click auto-play uses the same 350 ms manual detection as the V
   version (QML's `MouseArea.onDoubleClicked` would also fire the two
   underlying clicks, so the timing check is done by hand).
-- Card art is loaded from the individual PNGs; the game no longer needs the
+- Card art is loaded from the individual SVGs; the game no longer needs the
   generated atlas.
+- Card faces and back are vector SVGs in the style of David Bellot's
+  public-domain SVG-cards set (sourced via cards.revk.uk; the 48 faces used
+  here carry no watermark).

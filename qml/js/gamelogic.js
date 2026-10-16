@@ -67,7 +67,7 @@ function cardImageName(suit, rank) {
     else if (rank === 12) r = 'queen';
     else if (rank === 13) r = 'king';
     else r = String(rank);
-    return r + '_of_' + s + '.png';
+    return r + '_of_' + s + '.svg';
 }
 
 function cardLabel(card) { return card.rank + ' of ' + SUIT_NAMES[card.suit]; }
