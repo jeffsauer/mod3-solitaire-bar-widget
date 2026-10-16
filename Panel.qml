@@ -118,6 +118,7 @@ Panel {
                 anchors.fill: parent
                 theme: root.gameTheme
                 cardBackSource: root.cardBackSource
+                cornerRadius: Style.cornerRadius
             }
         }
     }

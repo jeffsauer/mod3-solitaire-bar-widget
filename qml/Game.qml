@@ -26,6 +26,11 @@ Item {
     // Card back image source (set by the host; defaults to the bundled back).
     property string cardBackSource: "../PNG-cards-1.3/card_back.png"
 
+    // Corner radius of the host panel card (0 = square). The full-bleed
+    // layers (felt, bottom bar, dialog dim) are rounded to match so they
+    // don't paint over the card's rounded corners.
+    property real cornerRadius: 0
+
     // Shared "Are you sure?" confirmation dialog
     property bool confirmOpen: false
     property string confirmText: ""
@@ -270,6 +275,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             color: theme.felt
+            radius: root.cornerRadius
         }
 
         // Header
@@ -467,6 +473,7 @@ Item {
             width: Logic.DESIGN_W
             height: Logic.BOTTOM_BAR_H
             color: Qt.darker(theme.felt, 1.5)
+            radius: root.cornerRadius
             border.color: theme.barBorder
             border.width: 1
 
@@ -499,6 +506,7 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 color: "#80000000"
+                radius: root.cornerRadius
             }
             // Clicking the dim area cancels
             MouseArea {
