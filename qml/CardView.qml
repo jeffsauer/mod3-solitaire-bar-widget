@@ -9,13 +9,33 @@ Item {
     property int rank: 2       // 2..13 (11=J, 12=Q, 13=K)
     property bool selected: false
     property bool showBack: false
+    property string backSource: "../PNG-cards-1.3/card_back.png"
     property color selectionColor: "#ff8c00"
+
+    // Card back: wallpaper crop with a traditional white border.
+    Item {
+        anchors.fill: parent
+        visible: root.showBack
+
+        Rectangle {
+            anchors.fill: parent
+            color: "white"
+            radius: 6
+        }
+        Image {
+            anchors.fill: parent
+            anchors.margins: 7
+            source: root.backSource
+            fillMode: Image.PreserveAspectCrop
+            smooth: true
+            asynchronous: true
+        }
+    }
 
     Image {
         anchors.fill: parent
-        source: root.showBack
-                ? "../PNG-cards-1.3/card_back.png"
-                : "../PNG-cards-1.3/" + Logic.cardImageName(root.suit, root.rank)
+        visible: !root.showBack
+        source: "../PNG-cards-1.3/" + Logic.cardImageName(root.suit, root.rank)
         fillMode: Image.Stretch
         smooth: true
         asynchronous: true

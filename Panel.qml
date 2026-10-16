@@ -42,6 +42,31 @@ Panel {
     property var gameTheme: Theme.defaultTheme()
     property string lastThemeText: ""
 
+    // Card back source: a crop of the current desktop wallpaper with a
+    // traditional white border (refreshed on theme/background change),
+    // falling back to the bundled back if none is available.
+    property string wallpaperPath: ""
+    property string cardBackSource: {
+        if (/\.(png|jpe?g|webp|bmp|tiff?|svg)$/i.test(wallpaperPath))
+            return "file://" + wallpaperPath
+        return Qt.resolvedUrl("PNG-cards-1.3/card_back.png")
+    }
+
+    function refreshWallpaper() { bgProc.running = true }
+
+    Process {
+        id: bgProc
+        command: ["readlink", "-f",
+                  Quickshell.env("HOME") + "/.local/state/omarchy/current/background"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var p = text.trim()
+                if (p !== root.wallpaperPath)
+                    root.wallpaperPath = p
+            }
+        }
+    }
+
     FileView {
         id: themeFile
         path: Quickshell.env("HOME") + "/.local/state/omarchy/current/theme/colors.toml"
@@ -51,6 +76,7 @@ Panel {
             if (t !== root.lastThemeText) {
                 root.lastThemeText = t;
                 root.gameTheme = Theme.loadTheme(t);
+                root.refreshWallpaper();
             }
         }
         onFileChanged: themeFile.reload()
@@ -63,7 +89,10 @@ Panel {
         interval: 3000
         running: true
         repeat: true
-        onTriggered: themeFile.reload()
+        onTriggered: {
+            themeFile.reload()
+            root.refreshWallpaper()
+        }
     }
 
     KeyboardPanel {
@@ -88,6 +117,7 @@ Panel {
             Game {
                 anchors.fill: parent
                 theme: root.gameTheme
+                cardBackSource: root.cardBackSource
             }
         }
     }

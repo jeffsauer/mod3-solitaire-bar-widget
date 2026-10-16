@@ -25,6 +25,9 @@ Item {
     // Desktop theme colors (Omarchy palette via shell.qml, else built-ins)
     property var theme: Theme.defaultTheme()
 
+    // Card back image source (set by the host; defaults to the bundled back).
+    property string cardBackSource: "../PNG-cards-1.3/card_back.png"
+
     // Shared "Are you sure?" confirmation dialog
     property bool confirmOpen: false
     property string confirmText: ""
@@ -416,6 +419,7 @@ Item {
             CardView {
                 anchors.fill: parent
                 showBack: true
+                backSource: root.cardBackSource
                 visible: {
                     root.stateVersion;
                     return !!(root.gameState && root.gameState.deck.length > 0);

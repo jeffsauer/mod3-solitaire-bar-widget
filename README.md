@@ -67,6 +67,12 @@ text, buttons and selection highlight — switching themes re-skins the game
 live, no restart. The parsing lives in `qml/js/theme.js` (tested by
 `tests/test_theme.mjs`).
 
+The talon card back is a center crop of the current desktop wallpaper
+(`~/.local/state/omarchy/current/background`) with a traditional white
+border, refreshed on theme/background changes — so it always matches the
+active theme. Falls back to the bundled `card_back.png` if no image
+background is set.
+
 ## Tests
 
 The game logic and the solver are plain JavaScript, tested with node:
