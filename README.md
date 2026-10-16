@@ -3,8 +3,7 @@
 QML port of **Mod3 Solitaire** (the Mod3 variation from KDE kpatience),
 originally written in V with the `gg`/sokol backend. This version is an
 [Omarchy](https://omarchy.org/) **bar widget plugin**: a ♠ button in the
-Quattro bar opens the game in a panel. It also runs as a standalone
-Quickshell window or under plain Qt Quick (`qmlscene`).
+Quattro bar opens the game in a panel.
 
 Two decks, 32 slots in a 4×8 grid. Build same-suit sequences in rows 1–3:
 
@@ -22,11 +21,8 @@ target slot — or double-click a card to auto-play it to a valid target.
 manifest.json      Omarchy plugin manifest (bar-widget)
 BarWidget.qml      Bar entry point: ♠ button, toggles the game panel
 Panel.qml          Game panel (anchored to the bar button, Escape closes)
-shell.qml          Standalone Quickshell entry point (regular desktop window;
-                   must stay at the repo root — quickshell -c loads
-                   <config dir>/shell.qml)
 qml/
-  Game.qml           The game UI (pure QtQuick — also runs under qmlscene)
+  Game.qml           The game UI (pure QtQuick)
   CardView.qml       Card image component
   FlyingCard.qml     Animated card-flight overlay
   GameButton.qml     Side-panel button
@@ -47,33 +43,14 @@ tests/
 omarchy plugin add https://github.com/jeffsauer/mod3_solitaire_qml.git --enable
 ```
 
-Click the ♠ in the bar to open the game panel; Escape or the EXIT button
-closes it. Move it between bar sections with:
+Click the ♠ in the bar to open the game panel; Escape closes it. Move it
+between bar sections with:
 
 ```sh
 omarchy bar move io.github.jeffsauer.mod3-solitaire --section right
 ```
 
 Requires the `qt6-multimedia` QML module for the card-flip sound.
-
-**As a standalone Quickshell window** (Omarchy / Hyprland):
-
-```sh
-mkdir -p ~/.config/quickshell
-cp -r /path/to/mod3_solitaire_qml ~/.config/quickshell/mod3-solitaire
-quickshell -c mod3-solitaire
-```
-
-Requires the `qt6-multimedia` QML module for the card-flip sound.
-
-**Under plain Qt Quick** (for testing without Quickshell):
-
-```sh
-qmlscene qml/Game.qml
-```
-
-`Game.qml` imports nothing Quickshell-specific, so it runs anywhere QtQuick
-does. `shell.qml` is just a thin `FloatingWindow` wrapper.
 
 ## Theming
 
@@ -83,8 +60,7 @@ Omarchy regenerates on every theme switch) and maps its `background`,
 `foreground`, `accent`, `red`, `green`, `blue` and `yellow` onto the felt,
 text, buttons and selection highlight — switching themes re-skins the game
 live, no restart. The parsing lives in `qml/js/theme.js` (tested by
-`tests/test_theme.mjs`). If the file is absent (e.g. plain `qmlscene` on a
-non-Omarchy box), the built-in green-felt palette is used.
+`tests/test_theme.mjs`).
 
 ## Tests
 
