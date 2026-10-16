@@ -44,6 +44,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: "transparent"
+        radius: 6
         border.width: root.selected ? 3 : 1
         border.color: root.selected ? root.selectionColor : "black"
     }
