@@ -73,6 +73,9 @@ Panel {
         bar: root.bar
         open: root.opened
         focusTarget: keyCatcher
+        // The game is laid out for exactly 1015x864 (buttons reach x=980),
+        // so the panel's default 14px padding would clip its right edge.
+        padding: 0
         contentWidth: 1015
         contentHeight: 864
 
