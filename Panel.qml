@@ -121,6 +121,7 @@ Panel {
                 theme: root.gameTheme
                 cardBackSource: root.cardBackSource
                 cornerRadius: Style.cornerRadius
+                panelVisible: root.opened
             }
         }
     }

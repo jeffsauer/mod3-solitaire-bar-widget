@@ -19,6 +19,9 @@ Item {
     property string solverStatus: "Solver: Unknown"
     property int solverVersion: 0
     property bool muted: false
+    // True while the host panel is open/visible. Sound only plays when
+    // the game is unmuted AND the panel is visible.
+    property bool panelVisible: true
 
     // Desktop theme colors (Omarchy palette via Panel.qml, else built-ins)
     property var theme: Theme.defaultTheme()
@@ -54,6 +57,12 @@ Item {
     SoundEffect {
         id: flipSound
         source: "../sounds/card_flip.wav"
+    }
+
+    // Central sound gate: the flip sound plays only when the mute button
+    // is unmuted and the game panel is visible.
+    function playFlipSound() {
+        if (!root.muted && root.panelVisible) flipSound.play();
     }
 
     WorkerScript {
@@ -136,7 +145,7 @@ Item {
             return;
         }
         obj.started.connect(function () {
-            if (!root.muted) flipSound.play();
+            root.playFlipSound();
         });
         obj.finished.connect(function () {
             hiddenTops[key] = Math.max(0, (hiddenTops[key] || 1) - 1);
@@ -195,7 +204,7 @@ Item {
         if (Logic.undoLastMove(gameState)) {
             clearFlights();
             clearVictory();
-            if (!muted) flipSound.play();
+            root.playFlipSound();
             refreshState();
             updateSolver();
         } else {
