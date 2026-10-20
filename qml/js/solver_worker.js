@@ -2,148 +2,278 @@
 // Mod3 Solitaire - background solver (Quickshell/Qt WorkerScript entry point)
 //
 // Self-contained on purpose: WorkerScript sources cannot import other .js
-// files, so the bounded-DFS solver from mod3.v is duplicated here.
-// (The same algorithm also exists in gamelogic.js for reference/testing.)
+// files, so everything the solver needs lives in this file.
+//
+// Algorithm: A* best-first search over canonical state keys.
+//   - A state is encoded as one string: the four rows' piles joined by
+//     separators, plus the remaining deck length. Piles in rows 1-3 are
+//     SORTED (columns there are interchangeable - every rule that touches
+//     them is content-based), while Row 4 piles stay in true column order
+//     because the talon deals specific cards to specific columns. The
+//     remaining deck is fully described by its length: cards only ever pop
+//     off the end, so it is always a prefix of the deck we were handed.
+//   - State identity is the exact key string (no hash-only shortcuts, so
+//     verdicts are never corrupted by hash collisions).
+//   - Cost model matches the game's MOVES counter: moving a card costs 1,
+//     a talon deal costs 0. Auto-fills after a move are part of that move.
+//   - Heuristic: the number of cards not yet part of a correct sequence
+//     prefix in rows 1-3 (deck and Row 4 cards all count). Every such card
+//     must move at least once more, so the estimate never overshoots and
+//     the first time A* reaches a won state its move count is the minimum.
+//   - Pruning: cards are never moved off a pile that is already a correct
+//     sequence prefix in rows 1-3 (those cards are in final positions),
+//     and duplicate twin piles/destinations are only expanded once.
+//   - Budgets keep the worker honest: past MAX_GENERATED states or
+//     MAX_MS milliseconds the answer is "unable to determine".
 //
 // Protocol:
 //   in:  { version: int, grid: [[{suit,rank}] x 32], deck: [{suit,rank}] }
-//   out: { version: int, status: string }
+//   out: { version: int, status: string, moves: int (-1 unless winnable) }
 // ---------------------------------------------------------------------------
 
 var COLS = 8;
+var MAX_GENERATED = 300000;
+var MAX_MS = 5000;
 
-function hashState(grid, deck) {
-    var h = deck.length >>> 0;
-    for (var i = 0; i < 32; i++) {
-        h ^= (i * 0x9e3779b9) >>> 0;
-        var pile = grid[i];
-        for (var j = 0; j < pile.length; j++) {
-            var val = ((pile[j].suit << 8) | pile[j].rank) >>> 0;
-            h ^= Math.imul(val, (j + 1)) >>> 0;
-            h ^= 0x85ebca6b;
-            h = ((h << 13) | (h >>> 19)) >>> 0;
+// Key separators, chosen above the card-char range (chars 1..48) so no
+// card can ever collide with them: the 9 of spades is char 44 (','),
+// which rules out the printable punctuation separators.
+var SEP_PILE = String.fromCharCode(49);
+var SEP_ROW = String.fromCharCode(50);
+var SEP_DECK = String.fromCharCode(51);
+
+// Card <-> char: code 0..47 = suit*12 + (rank-2); stored char is code+1 so
+// pile strings never contain the separator characters used in state keys.
+function cardChar(card) { return String.fromCharCode(card.suit * 12 + (card.rank - 2) + 1); }
+function rankOf(ch) { return (ch.charCodeAt(0) - 1) % 12 + 2; }
+function suitOf(ch) { return Math.floor((ch.charCodeAt(0) - 1) / 12); }
+
+// Is this pile (string, bottom..top) a correct sequence prefix for row r?
+function pileIsValidPrefix(s, r) {
+    for (var i = 0; i < s.length; i++) {
+        if (rankOf(s.charAt(i)) !== 2 + r + i * 3) return false;
+        if (i > 0 && suitOf(s.charAt(i)) !== suitOf(s.charAt(0))) return false;
+    }
+    return true;
+}
+
+// Number of cards not yet part of a correct sequence prefix (the heuristic).
+// totalCards is 96 for a full game; positions serialized from a live game
+// always hold every card between grid and deck.
+function unplacedCount(rows, deckLen, totalCards) {
+    var placed = 0;
+    for (var r = 0; r < 3; r++) {
+        for (var p = 0; p < COLS; p++) {
+            var pile = rows[r][p];
+            for (var i = 0; i < pile.length; i++) {
+                if (rankOf(pile.charAt(i)) === 2 + r + i * 3 &&
+                    (i === 0 || suitOf(pile.charAt(i)) === suitOf(pile.charAt(0)))) {
+                    placed++;
+                } else {
+                    break;
+                }
+            }
         }
     }
-    return h >>> 0;
+    return totalCards - placed;
 }
 
-function isValidPile(pile, r) {
-    if (pile.length === 0) return true;
-    if (pile.length > 4) return false;
-    for (var i = 0; i < pile.length; i++) {
-        var expected = 2 + r + (i * 3);
-        if (pile[i].rank !== expected) return false;
-        if (i > 0 && pile[i].suit !== pile[i - 1].suit) return false;
+// grid (array of 32 piles of {suit,rank}) -> rows of pile strings.
+// Rows 1-3 sorted (canonical), Row 4 in column order.
+function encodeGrid(grid) {
+    var rows = [];
+    for (var r = 0; r < 4; r++) {
+        var piles = [];
+        for (var c = 0; c < COLS; c++) {
+            var pile = grid[r * COLS + c];
+            var s = '';
+            for (var i = 0; i < pile.length; i++) s += cardChar(pile[i]);
+            piles.push(s);
+        }
+        if (r < 3) piles.sort();
+        rows.push(piles);
+    }
+    return rows;
+}
+
+function keyOf(rows, deckLen) {
+    return rows[0].join(SEP_PILE) + SEP_ROW + rows[1].join(SEP_PILE) + SEP_ROW +
+           rows[2].join(SEP_PILE) + SEP_ROW + rows[3].join(SEP_PILE) + SEP_DECK + deckLen;
+}
+
+function decodeKey(key) {
+    var parts = key.split(SEP_DECK);
+    var rowParts = parts[0].split(SEP_ROW);
+    var rows = [];
+    for (var r = 0; r < 4; r++) rows.push(rowParts[r].split(SEP_PILE));
+    return { rows: rows, deckLen: parseInt(parts[1], 10) };
+}
+
+function isWonRows(rows, deckLen) {
+    if (deckLen > 0) return false;
+    for (var c = 0; c < COLS; c++) if (rows[3][c].length > 0) return false;
+    for (var r = 0; r < 3; r++) {
+        for (var c2 = 0; c2 < COLS; c2++) {
+            var pile = rows[r][c2];
+            if (pile.length !== 4 || !pileIsValidPrefix(pile, r)) return false;
+        }
     }
     return true;
 }
 
-function isValidMove(grid, card, toIdx) {
-    var toR = Math.floor(toIdx / COLS);
-    var dest = grid[toIdx];
-
-    if (toR === 3) return dest.length === 0;
-    if (dest.length >= 4) return false;
-    if (dest.length === 0) return card.rank === (2 + toR);
-
-    var expectedRank = 2 + toR + (dest.length * 3);
-    if (card.rank !== expectedRank) return false;
-
-    var expectedPrevRank = 2 + toR + ((dest.length - 1) * 3);
-    var top = dest[dest.length - 1];
-    if (top.rank !== expectedPrevRank || top.suit !== card.suit) return false;
-    return true;
-}
-
-function isWon(grid, deck) {
-    if (deck.length > 0) return false;
-    for (var i = 24; i < 32; i++) {
-        if (grid[i].length > 0) return false;
-    }
-    for (var i = 0; i < 24; i++) {
-        if (grid[i].length !== 4) return false;
-    }
-    return true;
-}
-
-function cloneGrid(grid) {
-    return grid.map(function (pile) {
-        return pile.map(function (c) { return { suit: c.suit, rank: c.rank }; });
-    });
-}
-
-// Returns 1 = winnable, -1 = deadlocked, 0 = gave up (state cap reached)
+// ---------------------------------------------------------------------------
+// Search. Returns { result: 1 winnable | -1 deadlocked | 0 unknown,
+//                   moves: minimum card moves to win (only when result = 1),
+//                   states: states generated }
+// ---------------------------------------------------------------------------
 function solveState(startGrid, startDeck) {
-    if (isWon(startGrid, startDeck)) return 1;
+    var totalCards = startDeck.length;
+    for (var i = 0; i < 32; i++) totalCards += startGrid[i].length;
 
-    var visited = {};
-    var queue = [{ grid: startGrid, deck: startDeck.slice() }];
-    var statesExplored = 0;
-    var maxStates = 20000; // same bound as the V version
+    // Deck cards in pop order reference: the remaining deck is always the
+    // first deckLen entries of startDeck; pops take deckCards[deckLen-1].
+    var deckCards = startDeck.map(cardChar);
 
-    while (queue.length > 0) {
-        if (statesExplored > maxStates) return 0;
-
-        var curr = queue.pop();
-        statesExplored++;
-
-        var hash = hashState(curr.grid, curr.deck);
-        if (visited[hash]) continue;
-        visited[hash] = true;
-
-        if (isWon(curr.grid, curr.deck)) return 1;
-
-        // Grid moves
-        for (var fromIdx = 0; fromIdx < 32; fromIdx++) {
-            if (curr.grid[fromIdx].length === 0) continue;
-
-            // Pruning: never undo a correctly placed sequence element
-            if (fromIdx < 24) {
-                var fr = Math.floor(fromIdx / COLS);
-                if (isValidPile(curr.grid[fromIdx], fr)) continue;
-            }
-
-            var topCard = curr.grid[fromIdx][curr.grid[fromIdx].length - 1];
-
-            for (var toIdx = 0; toIdx < 32; toIdx++) {
-                if (fromIdx === toIdx) continue;
-                if (isValidMove(curr.grid, topCard, toIdx)) {
-                    var nextGrid = cloneGrid(curr.grid);
-                    var moved = nextGrid[fromIdx].pop();
-                    nextGrid[toIdx].push(moved);
-                    // replicate the auto-fill of empty row-4 slots after a move
-                    var nextDeck = curr.deck.slice();
-                    for (var c = 0; c < COLS; c++) {
-                        var slotIdx = 24 + c;
-                        if (nextGrid[slotIdx].length === 0 && nextDeck.length > 0) {
-                            nextGrid[slotIdx].push(nextDeck.pop());
-                        }
-                    }
-                    var nh = hashState(nextGrid, nextDeck);
-                    if (!visited[nh]) queue.push({ grid: nextGrid, deck: nextDeck });
-                }
-            }
-        }
-
-        // Talon deal
-        if (curr.deck.length > 0) {
-            var dGrid = cloneGrid(curr.grid);
-            var dDeck = curr.deck.slice();
-            for (var c2 = 0; c2 < COLS; c2++) {
-                if (dDeck.length > 0) {
-                    dGrid[24 + c2].push(dDeck.pop());
-                }
-            }
-            var dh = hashState(dGrid, dDeck);
-            if (!visited[dh]) queue.push({ grid: dGrid, deck: dDeck });
-        }
+    var startRows = encodeGrid(startGrid);
+    if (isWonRows(startRows, startDeck.length)) {
+        return { result: 1, moves: 0, states: 0 };
     }
 
-    return -1; // explored everything: deadlocked
+    var best = {};           // state key -> cheapest g seen
+    var buckets = [];        // buckets[f] = array of [key, g], LIFO
+    var generated = 0;
+    var t0 = Date.now();
+
+    function relax(rows, deckLen, g) {
+        var key = keyOf(rows, deckLen);
+        var known = best[key];
+        if (known !== undefined && known <= g) return;
+        best[key] = g;
+        generated++;
+        var f = g + unplacedCount(rows, deckLen, totalCards);
+        while (buckets.length <= f) buckets.push(null);
+        if (!buckets[f]) buckets[f] = [];
+        buckets[f].push([key, g]);
+    }
+
+    relax(startRows, startDeck.length, 0);
+
+    var currentF = 0;
+    var pops = 0;
+    while (true) {
+        // Advance to the next non-empty bucket (f never decreases along
+        // an edge: deals keep f, moves raise it by at most their cost).
+        while (currentF < buckets.length && (!buckets[currentF] || buckets[currentF].length === 0)) {
+            currentF++;
+        }
+        if (currentF >= buckets.length) {
+            return { result: -1, moves: -1, states: generated }; // space exhausted
+        }
+        var bucket = buckets[currentF];
+        var entry = bucket.pop();
+        var key = entry[0];
+        var g = entry[1];
+        if (best[key] !== undefined && best[key] < g) continue; // stale entry
+
+        pops++;
+        if (generated > MAX_GENERATED || ((pops & 1023) === 0 && Date.now() - t0 > MAX_MS)) {
+            return { result: 0, moves: -1, states: generated }; // over budget
+        }
+
+        var decoded = decodeKey(key);
+        var rows = decoded.rows;
+        var deckLen = decoded.deckLen;
+
+        if (isWonRows(rows, deckLen)) {
+            return { result: 1, moves: g, states: generated };
+        }
+
+        expand(rows, deckLen, g);
+    }
+
+    function expand(rows, deckLen, g) {
+        var r, p, q, rr;
+        for (r = 0; r < 4; r++) {
+            var seenSrc = {};
+            for (p = 0; p < COLS; p++) {
+                var pile = rows[r][p];
+                if (pile.length === 0) continue;
+                if (seenSrc[pile]) continue; // identical twin pile: same successors
+                seenSrc[pile] = true;
+                if (r < 3 && pileIsValidPrefix(pile, r)) continue; // never unbuild
+
+                var card = pile.charAt(pile.length - 1);
+                var crank = rankOf(card);
+                var csuit = suitOf(card);
+
+                // Sequence destinations in rows 1-3: the card's rank fixes
+                // exactly which (row, dest pile length) class can take it.
+                for (rr = 0; rr < 3; rr++) {
+                    var rem = crank - 2 - rr;
+                    if (rem < 0 || rem % 3 !== 0) continue;
+                    var needLen = rem / 3;
+                    if (needLen > 3) continue;
+                    var seenDst = {};
+                    for (q = 0; q < COLS; q++) {
+                        if (rr === r && q === p) continue;
+                        var dst = rows[rr][q];
+                        if (dst.length !== needLen) continue;
+                        if (needLen > 0) {
+                            var top = dst.charAt(dst.length - 1);
+                            if (suitOf(top) !== csuit) continue;
+                            if (rankOf(top) !== 2 + rr + (needLen - 1) * 3) continue;
+                        }
+                        if (seenDst[dst]) continue;
+                        seenDst[dst] = true;
+                        var nrows = [rows[0].slice(), rows[1].slice(), rows[2].slice(), rows[3].slice()];
+                        nrows[r][p] = pile.slice(0, pile.length - 1);
+                        nrows[rr][q] = dst + card;
+                        if (r < 3) nrows[r].sort();
+                        if (rr < 3 && rr !== r) nrows[rr].sort();
+                        var ndl = deckLen;
+                        for (var c = 0; c < COLS && ndl > 0; c++) {
+                            if (nrows[3][c].length === 0) nrows[3][c] = deckCards[--ndl];
+                        }
+                        relax(nrows, ndl, g + 1);
+                    }
+                }
+
+                // Row 4 destinations: every empty slot is a distinct
+                // concrete choice (future deals pair cards by column).
+                for (q = 0; q < COLS; q++) {
+                    if (rows[3][q].length !== 0) continue;
+                    if (r === 3 && q === p) continue;
+                    var nrows2 = [rows[0].slice(), rows[1].slice(), rows[2].slice(), rows[3].slice()];
+                    nrows2[r][p] = pile.slice(0, pile.length - 1);
+                    if (r < 3) nrows2[r].sort();
+                    nrows2[3][q] = card;
+                    var ndl2 = deckLen;
+                    for (var c2 = 0; c2 < COLS && ndl2 > 0; c2++) {
+                        if (nrows2[3][c2].length === 0) nrows2[3][c2] = deckCards[--ndl2];
+                    }
+                    relax(nrows2, ndl2, g + 1);
+                }
+            }
+        }
+
+        // Talon deal (cost 0, like the game's move counter): one card onto
+        // every Row 4 pile, in column order.
+        if (deckLen > 0) {
+            var drows = [rows[0].slice(), rows[1].slice(), rows[2].slice(), rows[3].slice()];
+            var ddl = deckLen;
+            for (var c3 = 0; c3 < COLS && ddl > 0; c3++) {
+                drows[3][c3] += deckCards[--ddl];
+            }
+            relax(drows, ddl, g);
+        }
+    }
 }
 
-function statusFor(result) {
-    if (result === 1) return 'Solver: This game is winnable.';
+function statusFor(result, moves) {
+    if (result === 1) {
+        if (moves === 0) return 'Solver: This game is winnable.';
+        return 'Solver: This game is winnable in ' + moves + (moves === 1 ? ' move.' : ' moves.');
+    }
     if (result === -1) return 'Solver: This game is no longer winnable.';
     return 'Solver: Unable to determine if this game is winnable.';
 }
@@ -151,12 +281,16 @@ function statusFor(result) {
 // WorkerScript entry point (also drivable from node with a shim)
 if (typeof WorkerScript !== 'undefined') {
     WorkerScript.onMessage = function (msg) {
-        var result = solveState(msg.grid, msg.deck);
-        WorkerScript.sendMessage({ version: msg.version, status: statusFor(result) });
+        var solved = solveState(msg.grid, msg.deck);
+        WorkerScript.sendMessage({
+            version: msg.version,
+            status: statusFor(solved.result, solved.moves),
+            moves: solved.result === 1 ? solved.moves : -1
+        });
     };
 }
 
 // node test hook
 if (typeof module !== 'undefined') {
-    module.exports = { solveState: solveState, statusFor: statusFor, isWon: isWon, isValidMove: isValidMove };
+    module.exports = { solveState: solveState, statusFor: statusFor };
 }

@@ -190,13 +190,18 @@ const H = Logic.SUIT_HEARTS, D = Logic.SUIT_DIAMONDS, C = Logic.SUIT_CLUBS, S = 
 
 // --- solver ---
 {
-    // won state -> 1
-    const grid = Array.from({ length: 32 }, () => []);
     const seq = (r, s) => [2 + r, 2 + r + 3, 2 + r + 6, 2 + r + 9].map(rank => card(s, rank));
-    for (let r = 0; r < 3; r++)
-        for (let c = 0; c < 8; c++)
-            grid[r * 8 + c] = seq(r, (r + c) % 4);
-    ok(Solver.solveState(grid, []) === 1, 'solver: won state -> 1');
+    const wonGrid = () => {
+        const grid = Array.from({ length: 32 }, () => []);
+        for (let r = 0; r < 3; r++)
+            for (let c = 0; c < 8; c++)
+                grid[r * 8 + c] = seq(r, (r + c) % 4);
+        return grid;
+    };
+
+    // won state -> winnable in 0
+    const won = Solver.solveState(wonGrid(), []);
+    ok(won.result === 1 && won.moves === 0, 'solver: won state -> winnable in 0');
 
     // deadlocked: deck empty, row4 full of cards that fit nowhere, no base cards out
     const grid2 = Array.from({ length: 32 }, () => []);
@@ -204,16 +209,33 @@ const H = Logic.SUIT_HEARTS, D = Logic.SUIT_DIAMONDS, C = Logic.SUIT_CLUBS, S = 
     for (let c = 0; c < 8; c++) grid2[24 + c] = [card(c % 4, dead[c])];
     const t0 = Date.now();
     const res = Solver.solveState(grid2, []);
-    ok(res === -1, 'solver: deadlocked state -> -1 (' + (Date.now() - t0) + 'ms)');
+    ok(res.result === -1, 'solver: deadlocked state -> -1 (' + (Date.now() - t0) + 'ms)');
 
-    // one move from won -> 1
-    const grid3 = Array.from({ length: 32 }, () => []);
-    for (let r = 0; r < 3; r++)
-        for (let c = 0; c < 8; c++)
-            grid3[r * 8 + c] = seq(r, (r + c) % 4);
+    // one move from won -> winnable in exactly 1
+    const grid3 = wonGrid();
     grid3[0] = grid3[0].slice(0, 3);          // pop the Jack off pile 0...
     grid3[24] = [card(0, 11)];                // ...it's sitting in waste
-    ok(Solver.solveState(grid3, []) === 1, 'solver: one-move win -> 1');
+    const one = Solver.solveState(grid3, []);
+    ok(one.result === 1 && one.moves === 1, 'solver: one-move win -> winnable in 1');
+
+    // the missing card is still in the talon: the deal is free, so the
+    // win still costs exactly 1 move (the game's counter ignores deals)
+    const grid4 = wonGrid();
+    const missing = grid4[23].pop();
+    const viaDeal = Solver.solveState(grid4, [missing]);
+    ok(viaDeal.result === 1 && viaDeal.moves === 1, 'solver: deal-then-place -> winnable in 1 (deal is free)');
+
+    // eight displaced top cards -> exactly 8 moves (each must move once)
+    const grid5 = wonGrid();
+    for (let c = 0; c < 8; c++) grid5[24 + c] = [grid5[c].pop()];
+    const eight = Solver.solveState(grid5, []);
+    ok(eight.result === 1 && eight.moves === 8, 'solver: eight displaced cards -> winnable in 8');
+
+    // status text
+    ok(Solver.statusFor(1, 5) === 'Solver: This game is winnable in 5 moves.', 'solver: status winnable-in-5');
+    ok(Solver.statusFor(1, 1) === 'Solver: This game is winnable in 1 move.', 'solver: status winnable-in-1');
+    ok(Solver.statusFor(-1, -1) === 'Solver: This game is no longer winnable.', 'solver: status deadlocked');
+    ok(Solver.statusFor(0, -1) === 'Solver: Unable to determine if this game is winnable.', 'solver: status unknown');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
