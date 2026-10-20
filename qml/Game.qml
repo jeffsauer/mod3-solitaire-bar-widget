@@ -264,7 +264,9 @@ Item {
         if (!anyActive) physicsTimer.running = false;
     }
 
-    Component.onCompleted: newGame()
+    // No game is dealt at startup: the board opens empty and the
+    // player presses NEW GAME to deal. (All bindings null-guard
+    // gameState, so a null state renders the empty board.)
 
     // ------------------------------------------------------------------
     // Board (fixed design size, uniformly scaled to the window)
@@ -391,9 +393,14 @@ Item {
             y: Logic.btnY(0)
             label: "NEW GAME"
             bgColor: theme.blue
-            onClicked: root.openConfirm(
-                "Are you sure you want to start a new game? Your current game will be lost.",
-                function () { root.newGame(); })
+            onClicked: {
+                // An empty board has nothing to lose — deal immediately.
+                // Mid-game, confirm first so a misclick can't destroy it.
+                if (Logic.isBoardEmpty(root.gameState)) root.newGame();
+                else root.openConfirm(
+                    "Are you sure you want to start a new game? Your current game will be lost.",
+                    function () { root.newGame(); });
+            }
         }
         GameButton {
             x: Logic.sideX()

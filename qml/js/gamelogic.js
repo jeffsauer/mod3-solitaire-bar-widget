@@ -126,6 +126,16 @@ function newGameState() {
     return { state: state, dealt: dealt };
 }
 
+// True when no game is in progress or every grid pile is empty —
+// i.e. there is nothing on the board a new game would destroy.
+function isBoardEmpty(state) {
+    if (!state) return true;
+    for (var i = 0; i < state.grid.length; i++) {
+        if (state.grid[i].length > 0) return false;
+    }
+    return true;
+}
+
 // ---------------------------------------------------------------------------
 // Undo
 // ---------------------------------------------------------------------------

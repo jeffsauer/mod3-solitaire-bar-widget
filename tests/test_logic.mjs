@@ -14,7 +14,7 @@ const Logic = new Function(src + '\nreturn { ' + [
     'COLS', 'ROWS', 'SLOTS', 'DESIGN_W', 'DESIGN_H', 'CARD_W', 'CARD_H',
     'CARD_MARGIN', 'START_X', 'START_Y', 'STACK_OFF_X', 'STACK_OFF_Y',
     'rowY', 'slotX', 'sideX', 'talonY', 'pileCardPos', 'makeCard', 'cardImageName',
-    'cardLabel', 'newGameState', 'undoLastMove', 'isValidMove', 'findAutoTarget',
+    'cardLabel', 'newGameState', 'isBoardEmpty', 'undoLastMove', 'isValidMove', 'findAutoTarget',
     'executeMove', 'dealFromTalon', 'handleGridClick', 'checkWinCondition',
     'beginVictory', 'stepVictory', 'serializeForSolver',
 ].join(',') + ' };')();
@@ -44,6 +44,17 @@ const H = Logic.SUIT_HEARTS, D = Logic.SUIT_DIAMONDS, C = Logic.SUIT_CLUBS, S = 
     ok(Object.values(counts).every(n => n === 2), 'newGame: every card appears exactly twice');
     ok(all.every(cd => cd.rank >= 2 && cd.rank <= 13), 'newGame: ranks 2..13, no aces');
     ok(state.message.includes('New Game'), 'newGame: message');
+}
+
+// --- board emptiness (startup state / new-game confirmation gate) ---
+{
+    ok(Logic.isBoardEmpty(null), 'isBoardEmpty: null state is empty');
+    const { state } = Logic.newGameState();
+    ok(!Logic.isBoardEmpty(state), 'isBoardEmpty: dealt game is not empty');
+    state.grid = Array.from({ length: 32 }, () => []);
+    ok(Logic.isBoardEmpty(state), 'isBoardEmpty: all piles empty');
+    state.grid[17] = [card(H, 2)];
+    ok(!Logic.isBoardEmpty(state), 'isBoardEmpty: one card anywhere is not empty');
 }
 
 // --- move rules ---
