@@ -18,6 +18,8 @@ Item {
     property int stateVersion: 0
     property string solverStatus: "Solver: Unknown"
     property int solverVersion: 0
+    property bool solverBusy: false
+    property var solverPending: null
     property bool muted: false
     // True while the host panel is open/visible. Sound only plays when
     // the game is unmuted AND the panel is visible.
@@ -69,9 +71,11 @@ Item {
         id: solverWorker
         source: "js/solver_worker.js"
         onMessage: function (messageObject) {
+            root.solverBusy = false;
             if (messageObject.version === root.solverVersion) {
                 root.solverStatus = messageObject.status;
             }
+            root.dispatchSolver();
         }
     }
 
@@ -223,13 +227,29 @@ Item {
     function updateSolver() {
         if (!gameState) return;
         if (gameState.isWon) {
+            solverVersion++;
+            solverPending = null;
             solverStatus = "Solver: This game is winnable.";
             return;
         }
         solverVersion++;
         solverStatus = "Solver: Calculating...";
         var s = Logic.serializeForSolver(gameState);
-        solverWorker.sendMessage({ version: solverVersion, grid: s.grid, deck: s.deck });
+        // Coalesce requests: a WorkerScript cannot be interrupted, so
+        // sending every position would leave the worker grinding through
+        // stale positions while the current one waits its turn. Keep only
+        // the newest request; dispatchSolver sends it as soon as the
+        // worker frees up.
+        solverPending = { version: solverVersion, grid: s.grid, deck: s.deck };
+        dispatchSolver();
+    }
+
+    function dispatchSolver() {
+        if (solverBusy || !solverPending) return;
+        var msg = solverPending;
+        solverPending = null;
+        solverBusy = true;
+        solverWorker.sendMessage(msg);
     }
 
     function beginVictory(cards) {
