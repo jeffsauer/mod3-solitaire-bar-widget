@@ -40,7 +40,13 @@ var MAX_MS = 5000;
 // which rules out the printable punctuation separators.
 var SEP_PILE = String.fromCharCode(49);
 var SEP_ROW = String.fromCharCode(50);
-var SEP_DECK = String.fromCharCode(51);
+
+// The deck length is encoded as ONE trailing char (52 + deckLen), never
+// as decimal digits: an earlier version appended it as a decimal string
+// after a char-51 separator, which is the character '3' itself - so any
+// deck length containing the digit 3 (3, 13, 23, 30-39, ...) was split
+// apart and decoded as NaN or a wrong, smaller count, making the solver
+// search positions as if most of the talon did not exist.
 
 // Card <-> char: code 0..47 = suit*12 + (rank-2); stored char is code+1 so
 // pile strings never contain the separator characters used in state keys.
@@ -98,15 +104,16 @@ function encodeGrid(grid) {
 
 function keyOf(rows, deckLen) {
     return rows[0].join(SEP_PILE) + SEP_ROW + rows[1].join(SEP_PILE) + SEP_ROW +
-           rows[2].join(SEP_PILE) + SEP_ROW + rows[3].join(SEP_PILE) + SEP_DECK + deckLen;
+           rows[2].join(SEP_PILE) + SEP_ROW + rows[3].join(SEP_PILE) +
+           String.fromCharCode(52 + deckLen);
 }
 
 function decodeKey(key) {
-    var parts = key.split(SEP_DECK);
-    var rowParts = parts[0].split(SEP_ROW);
+    var deckLen = key.charCodeAt(key.length - 1) - 52;
+    var rowParts = key.slice(0, key.length - 1).split(SEP_ROW);
     var rows = [];
     for (var r = 0; r < 4; r++) rows.push(rowParts[r].split(SEP_PILE));
-    return { rows: rows, deckLen: parseInt(parts[1], 10) };
+    return { rows: rows, deckLen: deckLen };
 }
 
 function isWonRows(rows, deckLen) {

@@ -231,6 +231,23 @@ const H = Logic.SUIT_HEARTS, D = Logic.SUIT_DIAMONDS, C = Logic.SUIT_CLUBS, S = 
     const eight = Solver.solveState(grid5, []);
     ok(eight.result === 1 && eight.moves === 8, 'solver: eight displaced cards -> winnable in 8');
 
+    // three missing cards, all still in a 3-card talon -> winnable in 3.
+    // (Regression: deck lengths containing the digit 3 used to decode
+    // wrong, making the solver treat the talon as empty and report a
+    // false deadlock.)
+    const grid6 = wonGrid();
+    const d1 = grid6[0].pop(), d2 = grid6[9].pop(), d3 = grid6[23].pop();
+    const three = Solver.solveState(grid6, [d1, d2, d3]);
+    ok(three.result === 1 && three.moves === 3, 'solver: 3-card talon -> winnable in 3');
+
+    // Jeff's reported position (2026-10-20): solver said "no longer
+    // winnable", play continued to a win. 3 cards in the talon.
+    const P = (s, r) => ({ suit: s, rank: r });
+    const gridJ = [[[0,2],[0,5],[0,8],[0,11]],[[1,2],[1,5],[1,8],[1,11]],[[2,2],[2,5],[2,8],[2,11]],[[3,2],[3,5]],[[0,2],[0,5],[0,8],[0,11]],[[1,2],[1,5],[1,8],[1,11]],[[2,2],[2,5],[2,8]],[[3,2],[3,5],[3,8],[3,11]],[[1,3],[1,6],[1,9],[1,12]],[[2,3],[2,6],[2,9],[2,12]],[[3,3],[3,6],[3,9],[3,12]],[[0,3],[0,6],[0,9],[0,12]],[[1,3],[1,6],[1,9],[1,12]],[[2,3],[2,6],[2,9],[2,12]],[[3,3],[3,6],[3,9]],[[0,3],[0,6],[0,9]],[[2,4],[2,7],[2,10],[2,13]],[[3,4],[3,7],[3,10],[3,13]],[[0,4],[0,7],[0,10],[0,13]],[[1,4],[1,7],[1,10]],[[2,4],[2,7],[2,10],[2,13]],[[3,4],[3,7],[3,10],[3,13]],[[0,4],[0,7],[0,10],[0,13]],[[1,4],[1,7],[1,10]],[[3,8]],[],[[1,13],[2,11]],[[3,12]],[],[],[],[]]
+        .map(pile => pile.map(([s, r]) => P(s, r)));
+    const jeff = Solver.solveState(gridJ, [P(3, 11), P(0, 12), P(1, 13)]);
+    ok(jeff.result === 1 && jeff.moves === 7, 'solver: reported false-deadlock position -> winnable in 7');
+
     // status text
     ok(Solver.statusFor(1, 5) === 'Solver: This game is winnable in 5 moves.', 'solver: status winnable-in-5');
     ok(Solver.statusFor(1, 1) === 'Solver: This game is winnable in 1 move.', 'solver: status winnable-in-1');
